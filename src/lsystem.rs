@@ -3,9 +3,11 @@ use std::{
     fmt::Display,
 };
 
+use crate::note::Note;
+
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct Element {
-    symbol: char,
+    pub note: Note,
 }
 
 #[derive(Debug)]
@@ -13,7 +15,7 @@ pub struct LSystem {
     alphabet: HashSet<Element>,
     rules: HashMap<Element, Vec<Element>>,
     axiom: Element,
-    elements: Vec<Element>,
+    pub elements: Vec<Element>,
     step: u32,
 }
 
@@ -53,31 +55,36 @@ impl LSystem {
 
 impl Display for LSystem {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s2 = format!(
+        let s = format!(
             "Result: {}\nStep: {}\nAxiom: {}\nAlphabet: {}\nRules: {}",
-            self.elements.iter().map(|e| e.symbol).collect::<String>(),
+            self.elements
+                .iter()
+                .map(|e| format!("{} ", e.note.get_name()))
+                .collect::<String>(),
             self.step.to_string(),
-            self.axiom.symbol,
+            self.axiom.note,
             self.alphabet
                 .iter()
-                .map(|e| format!("{} ", e.symbol))
+                .map(|e| format!("{} ", e.note.get_name()))
                 .collect::<String>(),
             self.rules
                 .iter()
                 .map(|r| format!(
                     "[{} -> {}] ",
-                    r.0.symbol,
-                    r.1.iter().map(|e| e.symbol).collect::<String>()
+                    r.0.note,
+                    r.1.iter()
+                        .map(|e| format!("{} ", e.note.get_name()))
+                        .collect::<String>()
                 ))
                 .collect::<String>()
         );
 
-        write!(f, "{}", s2)
+        write!(f, "{}", s)
     }
 }
 
 impl Element {
-    pub fn new(symbol: char) -> Self {
-        Self { symbol }
+    pub fn new(note: Note) -> Self {
+        Self { note }
     }
 }
