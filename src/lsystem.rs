@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    fmt::Display,
-};
+use std::{collections::HashMap, fmt::Display};
 
 use crate::note::Note;
 
@@ -12,7 +9,6 @@ pub struct Element {
 
 #[derive(Debug)]
 pub struct LSystem {
-    alphabet: HashSet<Element>,
     rules: HashMap<Element, Vec<Element>>,
     axiom: Element,
     pub elements: Vec<Element>,
@@ -20,13 +16,8 @@ pub struct LSystem {
 }
 
 impl LSystem {
-    pub fn new(
-        alphabet: HashSet<Element>,
-        rules: HashMap<Element, Vec<Element>>,
-        axiom: Element,
-    ) -> Self {
+    pub fn new(rules: HashMap<Element, Vec<Element>>, axiom: Element) -> Self {
         Self {
-            alphabet,
             rules,
             axiom,
             elements: vec![axiom],
@@ -56,17 +47,13 @@ impl LSystem {
 impl Display for LSystem {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = format!(
-            "Result: {}\nStep: {}\nAxiom: {}\nAlphabet: {}\nRules: {}",
+            "Result: {}\nStep: {}\nAxiom: {}\nRules: {}",
             self.elements
                 .iter()
                 .map(|e| format!("{} ", e.note.get_name()))
                 .collect::<String>(),
             self.step.to_string(),
             self.axiom.note,
-            self.alphabet
-                .iter()
-                .map(|e| format!("{} ", e.note.get_name()))
-                .collect::<String>(),
             self.rules
                 .iter()
                 .map(|r| format!(

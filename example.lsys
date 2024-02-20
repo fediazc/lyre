@@ -1,0 +1,7 @@
+rules {
+    A4 -> A4 C5 E5
+    E5 -> C5     D5 G4
+    G4 -> G4 A4
+}
+
+axiom: A4
