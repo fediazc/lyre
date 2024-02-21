@@ -163,7 +163,7 @@ fn parse_note(note: Pair<Rule>) -> Result<Note, &'static str> {
                     Ok(n) => n,
                     Err(_) => return Err("could not parse velocity parameter"),
                 },
-                None => unreachable!(),
+                None => 127,
             };
 
             let vel = vel.clamp(0, 127) as u8;
