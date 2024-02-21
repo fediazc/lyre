@@ -121,29 +121,31 @@ fn parse_note(note: Pair<Rule>) -> Result<Note, &'static str> {
         };
 
         let base_midi_num = match pitch {
-            "C" => 12,
-            "Db" => 13,
-            "D" => 14,
-            "Eb" => 15,
-            "E" => 16,
-            "F" => 17,
-            "Gb" => 18,
-            "G" => 19,
-            "Ab" => 20,
-            "A" => 21,
-            "Bb" => 22,
-            "B" => 23,
-            "C#" => 13,
-            "D#" => 15,
-            "E#" => 17,
-            "F#" => 18,
-            "G#" => 20,
-            "A#" => 22,
-            "B#" => 24,
+            "C" => 0,
+            "C#" => 1,
+            "Db" => 1,
+            "D" => 2,
+            "D#" => 3,
+            "Eb" => 3,
+            "E" => 4,
+            "E#" => 5,
+            "Fb" => 4,
+            "F" => 5,
+            "F#" => 6,
+            "Gb" => 6,
+            "G" => 7,
+            "G#" => 8,
+            "Ab" => 8,
+            "A" => 9,
+            "A#" => 10,
+            "Bb" => 10,
+            "B" => 11,
+            "B#" => 12,
+            "Cb" => 11,
             _ => unreachable!(),
         };
 
-        12 * octave + base_midi_num
+        12 * octave + base_midi_num + 24
     };
 
     let (duration, velocity) = match inner_note.next() {

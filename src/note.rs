@@ -17,8 +17,9 @@ impl Note {
     }
 
     pub fn get_name(&self) -> String {
-        let oct = self.midi_num as i32 / 12 - 1;
-        let base_midi_num = self.midi_num as i32 - 12 * oct - 12;
+        let n = self.midi_num as u32 / 12;
+        let oct = n - 2;
+        let base_midi_num = self.midi_num as u32 - 12 * n;
         let note_name = match base_midi_num {
             0 => "C",
             1 => "Db",
