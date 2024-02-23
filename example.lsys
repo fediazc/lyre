@@ -1,7 +1,8 @@
 rules {
-    A4 -> A4 C5 E5
-    E5 -> C5     D5 G4
-    G4 -> G4 A4
+    A4(8) -> A4 F4(2) E5
+    A4 -> A4 C4(6) E5
+    E5 -> C4(6) G4
+    G4 -> G4 A3
 }
 
-axiom: A4
+axiom: A4(8)

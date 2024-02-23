@@ -53,12 +53,12 @@ impl Display for LSystem {
                 .map(|e| format!("{} ", e.note.get_name()))
                 .collect::<String>(),
             self.step.to_string(),
-            self.axiom.note,
+            self.axiom.note.get_name(),
             self.rules
                 .iter()
                 .map(|r| format!(
                     "[{} -> {}] ",
-                    r.0.note,
+                    r.0.note.get_name(),
                     r.1.iter()
                         .map(|e| format!("{} ", e.note.get_name()))
                         .collect::<String>()

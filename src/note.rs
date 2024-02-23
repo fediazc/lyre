@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct Note {
     pub midi_num: u8,
@@ -17,31 +15,29 @@ impl Note {
     }
 
     pub fn get_name(&self) -> String {
-        let n = self.midi_num as u32 / 12;
-        let oct = n - 2;
-        let base_midi_num = self.midi_num as u32 - 12 * n;
-        let note_name = match base_midi_num {
-            0 => "C",
-            1 => "Db",
-            2 => "D",
-            3 => "Eb",
-            4 => "E",
-            5 => "F",
-            6 => "Gb",
-            7 => "G",
-            8 => "Ab",
-            9 => "A",
-            10 => "Bb",
-            11 => "B",
-            _ => todo!(),
-        };
-
-        format!("{note_name}{oct}")
+        name_from_key(self.midi_num as u32)
     }
 }
 
-impl Display for Note {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.get_name())
-    }
+pub fn name_from_key(key: u32) -> String {
+    let n = key / 12;
+    let oct = n - 2;
+    let base_midi_num = key - 12 * n;
+    let note_name = match base_midi_num {
+        0 => "C",
+        1 => "Db",
+        2 => "D",
+        3 => "Eb",
+        4 => "E",
+        5 => "F",
+        6 => "Gb",
+        7 => "G",
+        8 => "Ab",
+        9 => "A",
+        10 => "Bb",
+        11 => "B",
+        _ => todo!(),
+    };
+
+    format!("{note_name}{oct}")
 }
