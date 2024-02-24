@@ -22,7 +22,7 @@ pub fn parse_file(file_name: &str) -> Result<LSystem, &'static str> {
     };
 
     let mut rule_map = HashMap::<Element, Vec<Element>>::new();
-    let mut axiom: Option<Element> = None;
+    let mut axiom: Vec<Element> = Vec::new();
 
     for section in file.into_inner() {
         match section.as_rule() {
@@ -68,11 +68,10 @@ pub fn parse_file(file_name: &str) -> Result<LSystem, &'static str> {
                             }
                         }
                         Rule::axiom => {
-                            let note = match block.into_inner().next() {
-                                Some(note) => parse_note(note)?,
-                                None => unreachable!(),
-                            };
-                            axiom = Some(Element::new(note));
+                            for note in block.into_inner() {
+                                let parsed_note = parse_note(note)?;
+                                axiom.push(Element::new(parsed_note));
+                            }
                         }
                         _ => unreachable!(),
                     }
@@ -83,10 +82,9 @@ pub fn parse_file(file_name: &str) -> Result<LSystem, &'static str> {
         }
     }
 
-    let axiom = match axiom {
-        Some(elem) => elem,
-        None => return Err("missing axiom"),
-    };
+    if axiom.is_empty() {
+        return Err("missing or incomplete axiom");
+    }
 
     Ok(LSystem::new(rule_map, axiom))
 }

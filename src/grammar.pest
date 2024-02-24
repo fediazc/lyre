@@ -9,6 +9,6 @@ rule_lhs    =  { note }
 rule_rhs    =  { note+ }
 rule        =  { rule_lhs ~ "->" ~ rule_rhs }
 rule_block  =  { "rules {" ~ NEWLINE* ~ (rule ~ NEWLINE)+ ~ NEWLINE* ~ "}" }
-axiom       =  { "axiom:" ~ note }
+axiom       =  { "axiom:" ~ note+ }
 section     =  { rule_block | axiom }
 file        =  { SOI ~ NEWLINE* ~ section ~ NEWLINE* ~ section ~ NEWLINE* ~ EOI }

@@ -10,17 +10,20 @@ pub struct Element {
 #[derive(Debug)]
 pub struct LSystem {
     rules: HashMap<Element, Vec<Element>>,
-    axiom: Element,
+    axiom: Vec<Element>,
     pub elements: Vec<Element>,
     step: u32,
 }
 
 impl LSystem {
-    pub fn new(rules: HashMap<Element, Vec<Element>>, axiom: Element) -> Self {
+    pub fn new(rules: HashMap<Element, Vec<Element>>, axiom: Vec<Element>) -> Self {
+        let mut elems = vec![];
+        elems.extend(axiom.iter());
+
         Self {
             rules,
             axiom,
-            elements: vec![axiom],
+            elements: elems,
             step: 0,
         }
     }
@@ -53,7 +56,10 @@ impl Display for LSystem {
                 .map(|e| format!("{} ", e.note.get_name()))
                 .collect::<String>(),
             self.step.to_string(),
-            self.axiom.note.get_name(),
+            self.axiom
+                .iter()
+                .map(|e| format!("{} ", e.note.get_name()))
+                .collect::<String>(),
             self.rules
                 .iter()
                 .map(|r| format!(
