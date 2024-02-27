@@ -1,7 +1,7 @@
-use crate::{lsystem::Element, lsystem::LSystem, note::Note};
+use crate::{lsystem::LSystem, lsystem::Symbol};
 use pest::{iterators::Pair, Parser};
 use pest_derive::Parser;
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, fs, hash::Hash};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
@@ -21,157 +21,79 @@ pub fn parse_file(file_name: &str) -> Result<LSystem, &'static str> {
         Err(_) => return Err("could not parse file"),
     };
 
-    let mut rule_map = HashMap::<Element, Vec<Element>>::new();
-    let mut axiom: Vec<Element> = Vec::new();
+    let mut productions = HashMap::<Symbol, Vec<Symbol>>::new();
+    let mut axiom = Vec::<Symbol>::new();
 
-    for section in file.into_inner() {
-        match section.as_rule() {
-            Rule::section => {
-                for block in section.into_inner() {
-                    match block.as_rule() {
-                        Rule::rule_block => {
-                            for rule in block.into_inner() {
-                                let lhs_element: Element;
-                                let mut rhs_elements: Vec<Element> = vec![];
-                                match rule.as_rule() {
-                                    Rule::rule => {
-                                        let mut inner_rule = rule.into_inner();
-
-                                        let rule_lhs = match inner_rule.next() {
-                                            Some(lhs) => lhs,
-                                            // The None case is unreachable because there should
-                                            // always be a 'rule_lhs' available at this point,
-                                            // according to the grammar.
-                                            None => unreachable!(),
-                                        };
-
-                                        let parsed_note = match rule_lhs.into_inner().next() {
-                                            Some(note) => parse_note(note)?,
-                                            None => unreachable!(),
-                                        };
-
-                                        lhs_element = Element::new(parsed_note);
-
-                                        let rule_rhs = match inner_rule.next() {
-                                            Some(rhs) => rhs,
-                                            None => unreachable!(),
-                                        };
-
-                                        for note in rule_rhs.into_inner() {
-                                            let parsed_note = parse_note(note)?;
-                                            rhs_elements.push(Element::new(parsed_note));
-                                        }
-                                    }
-                                    _ => unreachable!(),
-                                }
-                                rule_map.insert(lhs_element, rhs_elements);
-                            }
-                        }
-                        Rule::axiom => {
-                            for note in block.into_inner() {
-                                let parsed_note = parse_note(note)?;
-                                axiom.push(Element::new(parsed_note));
-                            }
-                        }
-                        _ => unreachable!(),
-                    }
+    for rule in file.into_inner() {
+        match rule.as_rule() {
+            Rule::prodlist => {
+                for prod in rule.into_inner() {
+                    let (lhs, rhs) = parse_prod(prod)?;
+                    productions.insert(lhs, rhs);
                 }
+            }
+            Rule::axiom => {
+                let list = match rule.into_inner().next() {
+                    Some(s) => s,
+                    None => unreachable!(),
+                };
+
+                axiom = parse_symlist(list)?;
             }
             Rule::EOI => (),
             _ => unreachable!(),
         }
     }
 
-    if axiom.is_empty() {
-        return Err("missing or incomplete axiom");
+    if productions.is_empty() {
+        for sym in &axiom {
+            productions.insert(*sym, vec![*sym]);
+        }
     }
 
-    Ok(LSystem::new(rule_map, axiom))
+    Ok(LSystem::new(productions, axiom))
 }
 
-fn parse_note(note: Pair<Rule>) -> Result<Note, &'static str> {
-    let mut inner_note = note.into_inner();
+fn parse_prod(prod: Pair<Rule>) -> Result<(Symbol, Vec<Symbol>), &'static str> {
+    let mut inner_prod = prod.into_inner();
 
-    let note_midi_num = {
-        let note_name = match inner_note.next() {
-            Some(sub) => match sub.as_rule() {
-                Rule::note_name => sub,
-                _ => return Err("expected note_name sub-rule while parsing note rule"),
-            },
-            None => unreachable!(),
-        };
-
-        let mut inner_note_name = note_name.into_inner();
-        let pitch = match inner_note_name.next() {
-            Some(sub) => match sub.as_rule() {
-                Rule::pitch => sub.as_str(),
-                _ => return Err("expected pitch sub-rule while parsing note_name rule"),
-            },
-            None => unreachable!(),
-        };
-
-        let octave: u8 = match inner_note_name.next() {
-            Some(number) => match number.as_str().parse() {
-                Ok(n) => n,
-                Err(_) => return Err("could not parse octave rule"),
-            },
-            None => unreachable!(),
-        };
-
-        let base_midi_num = match pitch {
-            "C" => 0,
-            "C#" => 1,
-            "Db" => 1,
-            "D" => 2,
-            "D#" => 3,
-            "Eb" => 3,
-            "E" => 4,
-            "E#" => 5,
-            "Fb" => 4,
-            "F" => 5,
-            "F#" => 6,
-            "Gb" => 6,
-            "G" => 7,
-            "G#" => 8,
-            "Ab" => 8,
-            "A" => 9,
-            "A#" => 10,
-            "Bb" => 10,
-            "B" => 11,
-            "B#" => 12,
-            "Cb" => 11,
-            _ => unreachable!(),
-        };
-
-        12 * octave + base_midi_num + 24
+    let sym = match inner_prod.next() {
+        Some(s) => s,
+        None => unreachable!(),
     };
 
-    let (duration, velocity) = match inner_note.next() {
-        Some(note_params) => {
-            let mut inner_note_params = note_params.into_inner();
+    let prod_lhs = parse_symbol(sym)?;
 
-            let dur: u64 = match inner_note_params.next() {
-                Some(number) => match number.as_str().parse() {
-                    Ok(n) => n,
-                    Err(_) => return Err("could not parse duration parameter"),
-                },
-                None => unreachable!(),
-            };
-
-            let vel: u64 = match inner_note_params.next() {
-                Some(number) => match number.as_str().parse() {
-                    Ok(n) => n,
-                    Err(_) => return Err("could not parse velocity parameter"),
-                },
-                None => 127,
-            };
-
-            let vel = vel.clamp(0, 127) as u8;
-
-            (dur, vel)
-        }
-        None => (4, 127),
+    let list = match inner_prod.next() {
+        Some(s) => s,
+        None => unreachable!(),
     };
 
-    Ok(Note::new(note_midi_num, duration, velocity))
+    let prod_rhs = parse_symlist(list)?;
+
+    Ok((prod_lhs, prod_rhs))
+}
+
+fn parse_symlist(symlist: Pair<Rule>) -> Result<Vec<Symbol>, &'static str> {
+    let mut res = vec![];
+    for sym in symlist.into_inner() {
+        res.push(parse_symbol(sym)?);
+    }
+    Ok(res)
+}
+
+fn parse_symbol(symbol: Pair<Rule>) -> Result<Symbol, &'static str> {
+    let symbol_char = match symbol.as_str().chars().next() {
+        Some(ch) => ch,
+        None => return Err("could not parse symbol"),
+    };
+
+    match symbol_char {
+        '[' => Ok(Symbol::Push),
+        ']' => Ok(Symbol::Pop),
+        '+' => Ok(Symbol::Plus),
+        '-' => Ok(Symbol::Minus),
+        'S' => Ok(Symbol::Play),
+        ch => Ok(Symbol::Letter(ch)),
+    }
 }

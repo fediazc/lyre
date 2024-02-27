@@ -1,8 +1,8 @@
-rules {
-    A4(8) -> A4 F4(2) E5
-    A4 -> A4 C4(6) E5
-    E5 -> C4(6) G4
-    G4 -> G4 A3
-}
-
-axiom: A4(8)
+S => SMNQRQROP
+M => [++SS+SS+]
+N => [--SS-SS-]
+O => [-S++S++]
+P => [+S--S--]
+Q => ++S--S
+R => --S++S
+S

@@ -3,8 +3,9 @@ mod note;
 mod parser;
 
 use midly::{Format, Header, MidiMessage, Smf, Timing, Track, TrackEvent, TrackEventKind};
-use note::Note;
-use std::{collections::HashSet, env};
+use std::env;
+
+use crate::note::Scale;
 
 fn main() -> Result<(), &'static str> {
     let args: Vec<String> = env::args().collect();
@@ -19,24 +20,14 @@ fn main() -> Result<(), &'static str> {
     let mut smf = Smf::new(header);
 
     println!("Parsing file {}...", fname);
-    let mut system = crate::parser::parse_file(fname)?;
+    let mut sys = crate::parser::parse_file(fname)?;
 
     println!("Generating sequence...");
-    system.forward(4);
+    sys.forward(3);
 
     println!("Creating MIDI file...");
     let mut events: Track = vec![];
-    let mut bad_notes: HashSet<u8> = HashSet::new();
-    for note in system
-        .elements
-        .iter()
-        .map(|e| e.note)
-        .collect::<Vec<Note>>()
-    {
-        if note.midi_num > 127 {
-            bad_notes.insert(note.midi_num);
-        }
-
+    for note in sys.get_notes(Scale::new(vec![2, 1, 2, 2, 1, 2, 2])) {
         let on_event = note_on(note.midi_num, note.velocity);
         let off_event = note_off(note.duration as u32, note.midi_num, note.velocity);
 
@@ -46,21 +37,11 @@ fn main() -> Result<(), &'static str> {
 
     smf.tracks = vec![events];
 
-    if bad_notes.len() > 0 {
-        println!(
-            "Warning: writing note(s) {}to a MIDI file will result in unxpected behavior. The maximum pitch allowed is G8 (The maximum MIDI key value is 127, equivalent to a G8 in this program).",
-            bad_notes
-                .iter()
-                .map(|key| format!("{} ", note::name_from_key(*key as u32)))
-                .collect::<String>()
-        );
+    if smf.save("example.mid").is_err() {
+        return Err("could not save midi file");
     }
 
-    match smf.save("example.mid") {
-        Err(_) => return Err("could not save midi file"),
-        _ => (),
-    }
-    print!("Done\n");
+    println!("Done");
 
     Ok(())
 }

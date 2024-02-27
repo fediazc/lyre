@@ -1,29 +1,29 @@
-use std::{collections::HashMap, fmt::Display};
+use std::collections::HashMap;
 
-use crate::note::Note;
+use crate::note::{Note, Scale};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
-pub struct Element {
-    pub note: Note,
+pub enum Symbol {
+    Push,
+    Pop,
+    Plus,
+    Minus,
+    Play,
+    Letter(char),
 }
 
 #[derive(Debug)]
 pub struct LSystem {
-    rules: HashMap<Element, Vec<Element>>,
-    axiom: Vec<Element>,
-    pub elements: Vec<Element>,
+    rules: HashMap<Symbol, Vec<Symbol>>,
+    elements: Vec<Symbol>,
     step: u32,
 }
 
 impl LSystem {
-    pub fn new(rules: HashMap<Element, Vec<Element>>, axiom: Vec<Element>) -> Self {
-        let mut elems = vec![];
-        elems.extend(axiom.iter());
-
+    pub fn new(rules: HashMap<Symbol, Vec<Symbol>>, axiom: Vec<Symbol>) -> Self {
         Self {
             rules,
-            axiom,
-            elements: elems,
+            elements: axiom,
             step: 0,
         }
     }
@@ -45,39 +45,55 @@ impl LSystem {
             self.step += 1;
         }
     }
-}
 
-impl Display for LSystem {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = format!(
-            "Result: {}\nStep: {}\nAxiom: {}\nRules: {}",
-            self.elements
-                .iter()
-                .map(|e| format!("{} ", e.note.get_name()))
-                .collect::<String>(),
-            self.step.to_string(),
-            self.axiom
-                .iter()
-                .map(|e| format!("{} ", e.note.get_name()))
-                .collect::<String>(),
-            self.rules
-                .iter()
-                .map(|r| format!(
-                    "[{} -> {}] ",
-                    r.0.note.get_name(),
-                    r.1.iter()
-                        .map(|e| format!("{} ", e.note.get_name()))
-                        .collect::<String>()
-                ))
-                .collect::<String>()
-        );
+    pub fn get_notes(&self, scale: Scale) -> Vec<Note> {
+        let mut key: u8 = 60;
+        let mut scale_degree = 0;
+        let mut key_stack: Vec<u8> = vec![];
+        let mut scale_degree_stack: Vec<i32> = vec![];
+        let mut notes: Vec<Note> = vec![];
+        let mut last_played_key = key;
+        for symbol in &self.elements {
+            match symbol {
+                Symbol::Push => {
+                    key_stack.push(key);
+                    scale_degree_stack.push(scale_degree);
+                }
+                Symbol::Pop => {
+                    key = match key_stack.pop() {
+                        Some(k) => k,
+                        None => key,
+                    };
 
-        write!(f, "{}", s)
-    }
-}
+                    scale_degree = match scale_degree_stack.pop() {
+                        Some(s) => s,
+                        None => scale_degree,
+                    };
+                }
+                Symbol::Plus => {
+                    (key, _) = key.overflowing_add(scale.next_from(scale_degree));
+                    scale_degree += 1;
+                }
+                Symbol::Minus => {
+                    (key, _) = key.overflowing_sub(scale.prev_from(scale_degree));
+                    scale_degree -= 1;
+                }
+                Symbol::Play => {
+                    if key == last_played_key {
+                        if let Some(note) = notes.last_mut() {
+                            note.duration += 1;
+                        } else {
+                            notes.push(Note::new(key, 1, 127));
+                        }
+                    } else {
+                        notes.push(Note::new(key, 1, 127));
+                    }
 
-impl Element {
-    pub fn new(note: Note) -> Self {
-        Self { note }
+                    last_played_key = key;
+                }
+                Symbol::Letter(_) => (),
+            }
+        }
+        notes
     }
 }

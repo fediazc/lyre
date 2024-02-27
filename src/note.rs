@@ -5,6 +5,10 @@ pub struct Note {
     pub velocity: u8,
 }
 
+pub struct Scale {
+    steps: Vec<u8>,
+}
+
 impl Note {
     pub fn new(midi_num: u8, duration: u64, velocity: u8) -> Self {
         Self {
@@ -13,31 +17,18 @@ impl Note {
             velocity,
         }
     }
-
-    pub fn get_name(&self) -> String {
-        name_from_key(self.midi_num as u32)
-    }
 }
 
-pub fn name_from_key(key: u32) -> String {
-    let n = key / 12;
-    let oct = n - 2;
-    let base_midi_num = key - 12 * n;
-    let note_name = match base_midi_num {
-        0 => "C",
-        1 => "Db",
-        2 => "D",
-        3 => "Eb",
-        4 => "E",
-        5 => "F",
-        6 => "Gb",
-        7 => "G",
-        8 => "Ab",
-        9 => "A",
-        10 => "Bb",
-        11 => "B",
-        _ => todo!(),
-    };
+impl Scale {
+    pub fn new(steps: Vec<u8>) -> Self {
+        Self { steps }
+    }
 
-    format!("{note_name}{oct}")
+    pub fn next_from(&self, degree: i32) -> u8 {
+        self.steps[degree.rem_euclid(self.steps.len() as i32) as usize]
+    }
+
+    pub fn prev_from(&self, degree: i32) -> u8 {
+        self.next_from(degree - 1)
+    }
 }
