@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
 use crate::note::{Note, Scale};
 
@@ -46,8 +46,8 @@ impl LSystem {
         }
     }
 
-    pub fn get_notes(&self, scale: Scale) -> Vec<Note> {
-        let mut key: u8 = 60;
+    pub fn get_notes(&self, scale: Scale, start_key: u8) -> Vec<Note> {
+        let mut key: u8 = start_key;
         let mut scale_degree = 0;
         let mut key_stack: Vec<u8> = vec![];
         let mut scale_degree_stack: Vec<i32> = vec![];
@@ -95,5 +95,29 @@ impl LSystem {
             }
         }
         notes
+    }
+}
+
+impl Display for LSystem {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = self
+            .elements
+            .iter()
+            .fold(String::new(), |acc, sym| acc + &sym.to_string());
+        write!(f, "{}", s)
+    }
+}
+
+impl Display for Symbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match *self {
+            Symbol::Push => '[',
+            Symbol::Pop => ']',
+            Symbol::Plus => '+',
+            Symbol::Minus => '-',
+            Symbol::Play => 'S',
+            Symbol::Letter(c) => c,
+        };
+        write!(f, "{s}")
     }
 }
