@@ -1,4 +1,5 @@
 WHITESPACE = _{ " " }
+COMMENT    = _{ "#" ~ (!"\n" ~ ANY)* }
 symbol     =  { 'A'..'Z' | "[" | "]" | "+" | "-" }
 symlist    =  { symbol+ }
 prod       =  { symbol ~ "=>" ~ symlist }
