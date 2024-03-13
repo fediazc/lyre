@@ -11,7 +11,7 @@ If you're not familiar with L-systems, feel free to read the [primer](#l-system-
 You can download one of the pre-built binaries on the [releases page](https://github.com/fediazc/lyre/releases), or you can compile from source using the [Rust compiler](https://www.rust-lang.org/tools/install) and cargo with the following command:
 
 ```shell
-$ cargo install --git https://github.com/fediazc/lyre.git
+cargo install --git https://github.com/fediazc/lyre.git
 ```
 
 ### Usage
@@ -19,13 +19,13 @@ $ cargo install --git https://github.com/fediazc/lyre.git
 Use the `--help` option for the full manual.
 
 ```shell
-$ lyre [OPTIONS] -d <DEPTH> -o <OUTPUT> <FILE>
+lyre [OPTIONS] -d <DEPTH> -o <OUTPUT> <FILE>
 ```
 
 For example,
 
 ```shell
-$ lyre -d 5 -o example.mid system.txt
+lyre -d 5 -o example.mid system.txt
 ```
 
 uses `system.txt` as the input file containing the L-system definition, performs 5 iterations on it, and outputs the MIDI file `example.mid`.
