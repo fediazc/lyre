@@ -1,14 +1,18 @@
 use clap::{Args, ValueEnum};
 
 #[derive(clap::Parser)]
-#[command(version, about, long_about = None)]
+#[command(
+    version,
+    about = "Make music with L-systems",
+    long_about = LONG_ABOUT
+)]
 pub struct Cli {
-    /// Path to the input file
+    /// The path to the input file
     pub file: String,
     /// The number of iterations to perform on the L-system
     #[arg(short, long)]
     pub depth: u32,
-    /// Path for the output MIDI file
+    /// The file path to output the MIDI file to
     #[arg(short, long)]
     pub out: String,
     /// The scale type to use
@@ -47,3 +51,31 @@ pub enum ScaleType {
     Major,
     Minor,
 }
+
+static LONG_ABOUT: &str = "The following describes how to write a valid L-system file:
+
+    - A symbol can be any uppercase letter, or any of the following special characters: '[', ']', '+', '-'.
+    - The syntax for a rule is 'A => B' where 'A' is a single symbol and 'B' is a sequence of symbols. For example 'S => SS' and 'X => S+[X]-X' are both valid rules.
+    - A valid input file is a text file containing a list of rules, each on a separate line, followed by a sequence of symbols defining the axiom. The order of the rules does NOT affect the final result, but the axiom must always come after the list of rules.
+    - Anything written after a '#' character is considered a comment and is ignored.
+
+For example, the following is a valid L-system definition:
+
+
+        S => SS      # rule 1
+        X => S+[X]-X # rule 2
+
+        X            # axiom
+
+In this example, 'X' is the axiom.
+
+To generate music, the resulting string from the L-system is read from left to right. The characters 'S', '[', ']', '+', '-' are special symbols which perform the following actions:
+
+    - 'S': Play a sixteenth note. Multiple consecutive 'S's are played as a single note, with the length of the note matching the number of 'S's. For example, 'SS' will play a single note with the length of two sixteenth notes, a.k.a an eighth note, and 'SSSS' will play a quarter note.
+    - '+': Move the note to be played UP by a step defined by the scale. For example, 'S+S' will play C and then C#.
+    - '-': Move the note to be played DOWN by a step defined by the scale. For example, 'S-S' will play C and then B.
+    - '[': Push the current state into the stack. The state consists of simply the note to be played.
+    - ']': Pop the state. For example, 'S[+S]S' will play C, then C#, and finally C again.
+
+The examples above start from the note C and use the chromatic scale. You can change the starting note with the `--start-at` option, and the scale with the `--scale` or `--custom-scale` options (by default the major scale will be used).
+";

@@ -4,50 +4,53 @@ Lyre is a CLI tool for creating music with [Lindenmayer systems](https://en.wiki
 
 If you're not familiar with L-systems, feel free to read the [primer](#l-system-primer) below.
 
-## Usage
+## Installation and usage
 
-Use the --help option for the full manual.
+### Installing
 
+You can download one of the pre-built binaries on the [releases page](https://github.com/fediazc/lyre/releases), or you can compile from source using the [Rust compiler](https://www.rust-lang.org/tools/install) and cargo with the following command:
+
+```shell
+$ cargo install --git https://github.com/fediazc/lyre.git
 ```
-lyre [OPTIONS] -d <DEPTH> -o <OUT> <FILE>
+
+### Usage
+
+Use the `--help` option for the full manual.
+
+```shell
+$ lyre [OPTIONS] -d <DEPTH> -o <OUTPUT> <FILE>
 ```
 
 For example,
 
-```
-lyre -d 5 -o example.mid system.txt
+```shell
+$ lyre -d 5 -o example.mid system.txt
 ```
 
 uses `system.txt` as the input file containing the L-system definition, performs 5 iterations on it, and outputs the MIDI file `example.mid`.
 
-### Syntax
+#### Input file syntax
 
 The following describes how to write a valid L-system file:
 
 - A symbol can be any uppercase letter, or any of the following special characters: `[`, `]`, `+`, `-`.
-
 - The syntax for a rule is `A => B` where `A` is a single symbol and `B` is a sequence of symbols. For example `S => SS` and `X => S+[X]-X` are both valid rules.
-
 - A valid input file is a text file containing a list of rules, _each on a separate line_, followed by a sequence of symbols defining the axiom. The order of the rules does _not_ affect the final result, but the axiom must always come after the list of rules.
-
 - Anything written after a `#` character is considered a comment and is ignored.
 
 For example, the following is a valid L-system definition:
 
 ```
-S => SS
-X => S+[X]-X
+S => SS      # rule 1
+X => S+[X]-X # rule 2
 
-X
+X            # axiom
 ```
-
-In this example, `X` is the axiom.
 
 ## Making music
 
 To generate music, the resulting string from the L-system is read from left to right. The characters `S`, `[`, `]`, `+`, `-` are special symbols which perform the following actions:
-
-_Note: To keep things simple, all examples here start from the note C and use the chromatic scale_.
 
 - `S`: Play a sixteenth note. Multiple consecutive `S`s are played as a single note, with the length of the note matching the number of `S`s. For example, `SS` will play a single note with the length of two sixteenth notes, a.k.a an eighth note, and `SSSS` will play a quarter note.
 - `+`: Move the note to be played _up_ by a step defined by the scale. For example, `S+S` will play C and then C#.
@@ -55,9 +58,9 @@ _Note: To keep things simple, all examples here start from the note C and use th
 - `[`: Push the current state into the stack. The state consists of simply the note to be played.
 - `]`: Pop the state. For example, `S[+S]S` will play C, then C#, and finally C again.
 
-## L-system primer
+The examples above start from the note C and use the chromatic scale. You can change the starting note with the `--start-at` option, and the scale with the `--scale` or `--custom-scale` options (by default the major scale will be used).
 
-_Note: There are different [variations of L-systems](https://en.wikipedia.org/wiki/L-system#Variations). This section describes the one used in this program_.
+## L-system primer
 
 L-systems are used to generate strings of symbols iteratively, and can be defined as a set of **symbols**, a set of **rules**, and an **axiom**, which is the initial string of symbols.
 
