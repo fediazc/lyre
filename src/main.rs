@@ -16,7 +16,7 @@ fn main() -> Result<(), String> {
         Some(cs) => Scale::new(cs),
         None => match cli.scale_opts.scale_type {
             ScaleType::Chromatic => Scale::new(vec![1]),
-            ScaleType::Major => Scale::new(vec![2, 2, 1, 2, 2, 1]),
+            ScaleType::Major => Scale::new(vec![2, 2, 1, 2, 2, 2, 1]),
             ScaleType::Minor => Scale::new(vec![2, 1, 2, 2, 1, 2, 2]),
         },
     };
